@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "adbprocess.h"
 
 #include "dialog.h"
@@ -15,13 +16,14 @@ Dialog::~Dialog()
     delete ui;
 }
 
-
 void Dialog::on_testBtn_clicked()
 {
-    QString program = "adb";
-//    QStringList arguments;
-//    arguments << "-style" << "fusion";
+    QStringList arguments;
+    arguments << "devices";
 
     AdbProcess *myProcess = new AdbProcess(this);
-    myProcess->start(program, nullptr);
+    connect(myProcess, &AdbProcess::adbProcessResult, this, [this](AdbProcess::AdbRetCode retcode){
+        qDebug() << ">>>>>>>" << retcode;
+    });
+    myProcess->execute("", arguments);
 }
