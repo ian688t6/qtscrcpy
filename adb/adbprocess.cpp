@@ -29,11 +29,13 @@ void AdbProcess::initSignal()
     });
 
     connect(this, &QProcess::readyReadStandardError, this, [this]() {
-        qDebug() << readAllStandardError();
+        m_errorOutput = QString::fromLocal8Bit(readAllStandardError()).trimmed();
+        qDebug() << m_errorOutput;
     });
 
     connect(this, &QProcess::readyReadStandardOutput, this, [this]() {
-        qDebug() << readAllStandardOutput();
+        m_standardOutput = QString::fromLocal8Bit(readAllStandardOutput()).trimmed();
+        qDebug() << m_standardOutput;
     });
 
     connect(this, &QProcess::started, this, [this]() {
@@ -50,4 +52,77 @@ void AdbProcess::execute(const QString &serial, const QStringList &args)
     adbArgs << args;
     qDebug() << "adb" << adbArgs.join(" ");
     start("adb", adbArgs);
+}
+
+void AdbProcess::push(const QString &serial, const QString &local, const QString &remote)
+{
+    QStringList adbArgs;
+    adbArgs << "push";
+    adbArgs << local;
+    adbArgs << remote;
+    execute(serial, adbArgs);
+}
+
+void AdbProcess::remove(const QString &serial, const QString &remote)
+{
+    QStringList adbArgs;
+    adbArgs << "shell";
+    adbArgs << "rm";
+    adbArgs << remote;
+    execute(serial, adbArgs);
+}
+
+void AdbProcess::reverse(const QString &serial, const QString &deviceSocketName, const quint16 localPort)
+{
+    QStringList adbArgs;
+    adbArgs << "reverse";
+    adbArgs << QString("localabstract:%1").arg(deviceSocketName);
+    adbArgs << QString("tcp:%1").arg(localPort);
+    execute(serial, adbArgs);
+}
+
+void AdbProcess::removeReverse(const QString &serial, const QString &deviceSocketName)
+{
+    QStringList adbArgs;
+    adbArgs << "reverse";
+    adbArgs << "--remove";
+    adbArgs << QString("localabstract:%1").arg(deviceSocketName);
+    execute(serial, adbArgs);
+}
+
+QStringList AdbProcess::getDevicesSerialFromStdout()
+{
+    QStringList serials;
+    // "List of devices attached\nATOMCN0000001350\tdevice"
+    QStringList devicesInfoList = m_standardOutput.split(QRegExp("\r\n|\n"), Qt::SkipEmptyParts);
+    for (QString deviceInfo : devicesInfoList) {
+        QStringList infos = deviceInfo.split(QRegExp("\t"), Qt::SkipEmptyParts);
+        if ((2 == infos.count()) && (0 == infos[1].compare("device"))) {
+            serials << infos[0];
+        }
+    }
+
+    return serials;
+}
+
+QString AdbProcess::getDeviceIpFromStdout()
+{
+    QString ipaddr = "";
+    QString strIpExp = "inet [\\d.]*";
+    QRegExp ipRegExp(strIpExp, Qt::CaseInsensitive);
+    if (ipRegExp.indexIn(m_standardOutput) != -1) {
+        ipaddr = ipRegExp.cap(0);
+        ipaddr = ipaddr.right(ipaddr.size() - 5);
+    }
+    return ipaddr;
+}
+
+QString AdbProcess::getStdOut()
+{
+    return m_standardOutput;
+}
+
+QString AdbProcess::getErrOut()
+{
+    return m_errorOutput;
 }

@@ -17,11 +17,21 @@ public:
 
     AdbProcess(QObject *parent = nullptr);
     void execute(const QString& serial, const QStringList& args);
+    void push(const QString& serial, const QString& local, const QString& remote);
+    void remove(const QString& serial, const QString& remote);
+    void reverse(const QString& serial, const QString& deviceSocketName, const quint16 localPort);
+    void removeReverse(const QString& serial, const QString& deviceSocketName);
+    QStringList getDevicesSerialFromStdout();
+    QString getDeviceIpFromStdout();
+    QString getStdOut();
+    QString getErrOut();
 
 signals:
     void adbProcessResult(AdbRetCode result);
 private:
     void initSignal();
+    QString m_standardOutput;
+    QString m_errorOutput;
 
 };
 
