@@ -27,10 +27,12 @@ FORMS += \
 
 # Sub module
 include($$PWD/adb/adb.pri)
+include($$PWD/server/server.pri)
 
 # Include sub module path
 INCLUDEPATH += \
-    $$PWD/adb
+    $$PWD/adb \
+    $$PWD/server
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
