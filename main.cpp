@@ -9,5 +9,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     Dialog w;
     w.show();
-    return a.exec();
+    int ret = a.exec();
+    Decoder::deinit();
+    return ret;
 }
