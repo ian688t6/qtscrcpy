@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QPointer>
 #include <QMutex>
+
 extern "C"
 {
 #include "libavcodec/avcodec.h"
@@ -12,6 +13,7 @@ class Frames;
 class DeviceSocket;
 class Decoder : public QThread
 {
+    Q_OBJECT
 public:
     Decoder();
     virtual ~Decoder();

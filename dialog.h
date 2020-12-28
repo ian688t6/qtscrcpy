@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include "server.h"
+#include "frames.h"
+#include "decoder.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Dialog; }
@@ -24,5 +26,7 @@ private slots:
 private:
     Ui::Dialog *ui;
     Server m_server;
+    Frames m_frames;
+    Decoder m_decoder;
 };
 #endif // DIALOG_H

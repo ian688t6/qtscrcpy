@@ -14,11 +14,25 @@ Dialog::Dialog(QWidget *parent)
     });
     connect(&m_server, &Server::serverConnected, this, [this](bool success, const QString& deviceName, const QSize& size){
         qDebug() << "server connected" << success << deviceName << size;
+        if (success) {
+            m_decoder.setDeviceSocket(m_server.getDeviceSocket());
+            m_decoder.startDecoder();
+        }
+    });
+
+    m_frames.init();
+    m_decoder.setFrame(&m_frames);
+    connect(&m_decoder, &Decoder::onNewFrame, this, [this](){
+        m_frames.lock();
+        qDebug() << "Decoder::onNewFrame";
+        const AVFrame *frame = m_frames.consumeRenderedFrame();
+        m_frames.unLock();
     });
 }
 
 Dialog::~Dialog()
 {
+    m_frames.deinit();
     delete ui;
 }
 
@@ -45,7 +59,9 @@ void Dialog::on_testBtn_clicked()
 //    myProcess->remove("", "/storage/sdcard0/Download/vimrc");
 //    myProcess->removeReverse("", "scrcpy");
     qDebug() << "start Btn clicked";
+
     m_server.start("", 27183, 1080, 8000000);
+
 }
 
 void Dialog::on_stopBtn_clicked()

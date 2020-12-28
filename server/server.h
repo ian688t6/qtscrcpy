@@ -27,6 +27,7 @@ public:
     bool execute();
     QString getServerPath();
     bool readInfo(QString& deviceName, QSize& size);
+    DeviceSocket *getDeviceSocket();
 
 signals:
     void serverStartResult(bool success);

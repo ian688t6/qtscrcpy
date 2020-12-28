@@ -150,6 +150,11 @@ bool Server::readInfo(QString &deviceName, QSize &size)
     return true;
 }
 
+DeviceSocket *Server::getDeviceSocket()
+{
+    return m_deviceSocket;
+}
+
 void Server::onServerProcessResult(AdbProcess::AdbRetCode code)
 {
     if (ServerStatusExec == m_serverState) {
