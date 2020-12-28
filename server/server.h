@@ -1,6 +1,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 #include <QObject>
+#include <QSize>
+#include "tcpserver.h"
+#include "devicesocket.h"
 #include "adbprocess.h"
 
 class Server : public QObject
@@ -15,24 +18,27 @@ public:
         ServerStatusRunning
     };
     Server(QObject *parent=nullptr);
-    bool start(const QString& serial, const quint16 localPort, const quint16 maxSize, const quint16 bitRate);
+    bool start(const QString& serial, const quint16 localPort, const quint16 maxSize, const quint32 bitRate);
+    void stop();
     bool installServer();
     bool removeServer();
     bool enableTunnelReverse();
     bool disableTunnelReverse();
     bool execute();
     QString getServerPath();
+    bool readInfo(QString& deviceName, QSize& size);
 
 signals:
     void serverStartResult(bool success);
+    void serverConnected(bool success, const QString& deviceName, const QSize& size);
 
 private slots:
     void onServerProcessResult(AdbProcess::AdbRetCode code);
-
+    void onServerStatusResult(AdbProcess::AdbRetCode code);
 private:
     QString m_serial = "";
     quint16 m_maxSize;
-    quint16 m_bitRate;
+    quint32 m_bitRate;
     quint16 m_localPort;
     ServerStatus m_serverState;
     QString m_serverPath = "";
@@ -40,6 +46,10 @@ private:
     AdbProcess m_serverProcess;
     bool m_serverInstalled = false;
     bool m_reverseCreated = false;
+
+    TcpServer m_serverSocket;
+    DeviceSocket *m_deviceSocket = Q_NULLPTR;
+
 private:
     bool serverStartByStep(void);
 };

@@ -2,6 +2,7 @@
 #define DIALOG_H
 
 #include <QDialog>
+#include "server.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Dialog; }
@@ -18,7 +19,10 @@ public:
 private slots:
     void on_testBtn_clicked();
 
+    void on_stopBtn_clicked();
+
 private:
     Ui::Dialog *ui;
+    Server m_server;
 };
 #endif // DIALOG_H

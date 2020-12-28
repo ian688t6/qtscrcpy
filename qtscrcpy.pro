@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,11 +28,23 @@ FORMS += \
 # Sub module
 include($$PWD/adb/adb.pri)
 include($$PWD/server/server.pri)
+include($$PWD/decoder/decoder.pri)
+include($$PWD/commen/commen.pri)
 
 # Include sub module path
 INCLUDEPATH += \
     $$PWD/adb \
-    $$PWD/server
+    $$PWD/server \
+    $$PWD/decoder \
+    $$PWD/commen \
+    $$PWD/addons/ffmpeg/include
+
+# dependence lib
+LIBS += \
+        -L$$PWD/addons/ffmpeg/lib -lavformat \
+        -L$$PWD/addons/ffmpeg/lib -lavcodec \
+        -L$$PWD/addons/ffmpeg/lib -lavutil \
+        -L$$PWD/addons/ffmpeg/lib -lswscale
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
