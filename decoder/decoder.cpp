@@ -12,3 +12,13 @@ bool Decoder::init()
     }
     return true;
 }
+
+bool Decoder::deinit()
+{
+    avformat_network_deinit();
+}
+
+void Decoder::setFrame(Frames *frames)
+{
+    m_frames = frames;
+}
