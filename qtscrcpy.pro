@@ -29,6 +29,7 @@ FORMS += \
 include($$PWD/adb/adb.pri)
 include($$PWD/server/server.pri)
 include($$PWD/decoder/decoder.pri)
+include($$PWD/render/render.pri)
 include($$PWD/commen/commen.pri)
 
 # Include sub module path
@@ -37,6 +38,7 @@ INCLUDEPATH += \
     $$PWD/server \
     $$PWD/decoder \
     $$PWD/commen \
+    $$PWD/render \
     $$PWD/addons/ffmpeg/include
 
 # dependence lib

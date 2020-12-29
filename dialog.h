@@ -5,6 +5,7 @@
 #include "server.h"
 #include "frames.h"
 #include "decoder.h"
+#include "qyuvopenglwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Dialog; }
@@ -28,5 +29,6 @@ private:
     Server m_server;
     Frames m_frames;
     Decoder m_decoder;
+    QYUVOpenGLWidget *m_videoWidget;
 };
 #endif // DIALOG_H

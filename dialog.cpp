@@ -59,7 +59,8 @@ void Dialog::on_testBtn_clicked()
 //    myProcess->remove("", "/storage/sdcard0/Download/vimrc");
 //    myProcess->removeReverse("", "scrcpy");
     qDebug() << "start Btn clicked";
-
+    m_videoWidget = new QYUVOpenGLWidget(Q_NULLPTR);
+    m_videoWidget->show();
     m_server.start("", 27183, 720, 8000000);
 
 }
