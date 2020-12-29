@@ -126,3 +126,12 @@ QString AdbProcess::getErrOut()
 {
     return m_errorOutput;
 }
+
+bool AdbProcess::isRunning()
+{
+    if (QProcess::NotRunning == state()) {
+        return false;
+    } else {
+        return true;
+    }
+}

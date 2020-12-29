@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    qputenv("QTSCRCPY_SERVER_PATH", "../qtscrcpy/addons/scrcpy-server");
+    qputenv("QTSCRCPY_SERVER_PATH", "../qtscrcpy/addons/scrcpy-server.jar");
     Decoder::init();
     QApplication a(argc, argv);
     Dialog w;

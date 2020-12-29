@@ -96,26 +96,43 @@ bool Server::disableTunnelReverse()
 
 bool Server::execute()
 {
+    if (m_serverProcess.isRunning()) {
+        m_serverProcess.kill();
+    }
     QStringList args;
     args << "shell";
     args << QString("CLASSPATH=%1").arg(DEVICE_SERVER_PATH);
     args << "app_process";
-    args << "/";
+    args << "/"; // unused;
     args << "com.genymobile.scrcpy.Server";
-    args << "1.14";
-    args << "info";
     args << QString::number(m_maxSize);
     args << QString::number(m_bitRate);
-    args << "60";
-    args << "-1";
-    args << "false";
-    args << "-";
-    args << "true";
-    args << "true";
-    args << "0";
-    args << "false";
-    args << "false";
-    args << "-";
+    args << (m_tunnelForward ? "true" : "false");
+    if (m_crop.isEmpty()) {
+        args << "-";
+    } else {
+        args << m_crop;
+    }
+    args << (m_sendFrameMeta ? "true" : "false");
+//    args << "shell";
+//    args << QString("CLASSPATH=%1").arg(DEVICE_SERVER_PATH);
+//    args << "app_process";
+//    args << "/";
+//    args << "com.genymobile.scrcpy.Server";
+//    args << "1.14";
+//    args << "info";
+//    args << QString::number(m_maxSize);
+//    args << QString::number(m_bitRate);
+//    args << "60";
+//    args << "-1";
+//    args << "false";
+//    args << "-";
+//    args << "true";
+//    args << "true";
+//    args << "0";
+//    args << "false";
+//    args << "false";
+//    args << "-";
     m_serverProcess.execute(m_serial, args);
     return true;
 }

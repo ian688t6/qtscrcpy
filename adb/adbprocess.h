@@ -25,7 +25,7 @@ public:
     QString getDeviceIpFromStdout();
     QString getStdOut();
     QString getErrOut();
-
+    bool isRunning();
 signals:
     void adbProcessResult(AdbRetCode result);
 private:

@@ -41,13 +41,15 @@ private:
     quint16 m_maxSize;
     quint32 m_bitRate;
     quint16 m_localPort;
+    QString m_crop = "";
     ServerStatus m_serverState;
     QString m_serverPath = "";
     AdbProcess m_process;
     AdbProcess m_serverProcess;
     bool m_serverInstalled = false;
     bool m_reverseCreated = false;
-
+    bool m_tunnelForward = false;
+    bool m_sendFrameMeta = false;
     TcpServer m_serverSocket;
     DeviceSocket *m_deviceSocket = Q_NULLPTR;
 

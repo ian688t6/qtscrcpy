@@ -60,7 +60,7 @@ void Dialog::on_testBtn_clicked()
 //    myProcess->removeReverse("", "scrcpy");
     qDebug() << "start Btn clicked";
 
-    m_server.start("", 27183, 1080, 8000000);
+    m_server.start("", 27183, 720, 8000000);
 
 }
 
