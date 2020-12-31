@@ -19,11 +19,14 @@ public:
     };
     Server(QObject *parent=nullptr);
     bool start(const QString& serial, const quint16 localPort, const quint16 maxSize, const quint32 bitRate);
+    bool connectTo();
     void stop();
     bool installServer();
     bool removeServer();
     bool enableTunnelReverse();
     bool disableTunnelReverse();
+    bool enableTunnelForward();
+    bool disableTunnelForward();
     bool execute();
     QString getServerPath();
     bool readInfo(QString& deviceName, QSize& size);
@@ -49,12 +52,20 @@ private:
     bool m_serverInstalled = false;
     bool m_reverseCreated = false;
     bool m_tunnelForward = false;
+    bool m_tunnelEnabled = false;
     bool m_sendFrameMeta = false;
+    qint32 m_acceptTimeoutTimer = 0;
     TcpServer m_serverSocket;
     DeviceSocket *m_deviceSocket = Q_NULLPTR;
 
 private:
     bool serverStartByStep(void);
+    void startAcceptTimeoutTimer();
+    void stopAcceptTimeoutTimer();
+
+protected:
+    void timerEvent(QTimerEvent *event);
+
 };
 
 #endif // SERVER_H

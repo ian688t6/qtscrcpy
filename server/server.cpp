@@ -1,10 +1,14 @@
-#include <QFileInfo>
+#include <QDebug>
+#include <QTimer>
+#include <QThread>
+#include <QSize>
+#include <QTimerEvent>
 #include <QCoreApplication>
-
+#include <QFileInfo>
 #include "server.h"
 
 #define DEVICE_SERVER_PATH "/data/local/tmp/scrcpy-server.jar"
-#define SOCKET_NAME "scrcpy"
+#define SOCKET_NAME "qtscrcpy"
 #define DEVICE_INFO_FIELD_LENGTH    (64)
 
 Server::Server(QObject *parent)
@@ -18,7 +22,7 @@ Server::Server(QObject *parent)
         m_deviceSocket = dynamic_cast<DeviceSocket *>(m_serverSocket.nextPendingConnection());
         if (m_deviceSocket && m_deviceSocket->isValid() && readInfo(deviceName, size)) {
             m_serverSocket.close();
-            m_reverseCreated = false;
+            m_tunnelEnabled = false;
             disableTunnelReverse();
             removeServer();
             emit serverConnected(true, deviceName, size);
@@ -39,17 +43,83 @@ bool Server::start(const QString &serial, const quint16 localPort, const quint16
     return serverStartByStep();
 }
 
+bool Server::connectTo()
+{
+    if (ServerStatusRunning != m_serverState) {
+        qWarning("server not run");
+        return false;
+    }
+
+    if (!m_tunnelForward && !m_deviceSocket) {
+        startAcceptTimeoutTimer();
+        return true;
+    }
+
+    // device server need time to start
+    QTimer::singleShot(600, this, [this](){
+        QString deviceName;
+        QSize deviceSize;
+        bool success = false;
+
+        m_deviceSocket = new DeviceSocket();
+
+        // wait for devices server start
+        m_deviceSocket->connectToHost(QHostAddress::LocalHost, m_localPort);
+        if (!m_deviceSocket->waitForConnected(1000)) {
+            stop();
+            qWarning("connect to server failed");
+            emit serverConnected(false, "", QSize());
+            return false;
+        }
+        if (QTcpSocket::ConnectedState == m_deviceSocket->state()) {
+            // connect will success even if devices offline, recv data is real connect success
+            // because connect is to pc adb server
+            m_deviceSocket->waitForReadyRead(1000);
+            // devices will send 1 byte first on tunnel forward mode
+            QByteArray data = m_deviceSocket->read(1);
+            if (!data.isEmpty() && readInfo(deviceName, deviceSize)) {
+                success = true;
+            } else {
+                qWarning("connect to server read device info failed");
+                success = false;
+            }
+        } else {
+            qWarning("connect to server failed");
+            m_deviceSocket->deleteLater();
+            success = false;
+        }
+
+        if (success) {
+            // we don't need the adb tunnel anymore
+            disableTunnelForward();
+            m_tunnelEnabled = false;
+        } else {
+            stop();
+        }
+        emit serverConnected(success, deviceName, deviceSize);
+    });
+
+    return true;
+}
+
 void Server::stop()
 {
     if (m_deviceSocket) {
         qDebug() << "device socket close ----";
         m_deviceSocket->close();
+        m_deviceSocket->deleteLater();
     }
-    m_serverSocket.close();
-    m_serverState = ServerStatusNone;
+
     m_serverProcess.kill();
-    removeServer();
-    disableTunnelReverse();
+    if (m_tunnelEnabled) {
+        if (m_tunnelForward) {
+            disableTunnelForward();
+        } else {
+            disableTunnelReverse();
+        }
+        m_tunnelForward = false;
+        m_tunnelEnabled = false;
+    }
 }
 
 bool Server::installServer()
@@ -94,6 +164,30 @@ bool Server::disableTunnelReverse()
     return true;
 }
 
+bool Server::enableTunnelForward()
+{
+    if (m_process.isRunning()) {
+        m_process.kill();
+    }
+    m_process.forward(m_serial, m_localPort, SOCKET_NAME);
+    return true;
+}
+
+bool Server::disableTunnelForward()
+{
+    AdbProcess* adb = new AdbProcess();
+    if (!adb) {
+        return false;
+    }
+    connect(adb, &AdbProcess::adbProcessResult, this, [this](AdbProcess::AdbRetCode processResult){
+        if (AdbProcess::AdbRetStartSucc != processResult) {
+            sender()->deleteLater();
+        }
+    });
+    adb->forwardRemove(m_serial, m_localPort);
+    return true;
+}
+
 bool Server::execute()
 {
     if (m_serverProcess.isRunning()) {
@@ -114,25 +208,6 @@ bool Server::execute()
         args << m_crop;
     }
     args << (m_sendFrameMeta ? "true" : "false");
-//    args << "shell";
-//    args << QString("CLASSPATH=%1").arg(DEVICE_SERVER_PATH);
-//    args << "app_process";
-//    args << "/";
-//    args << "com.genymobile.scrcpy.Server";
-//    args << "1.14";
-//    args << "info";
-//    args << QString::number(m_maxSize);
-//    args << QString::number(m_bitRate);
-//    args << "60";
-//    args << "-1";
-//    args << "false";
-//    args << "-";
-//    args << "true";
-//    args << "true";
-//    args << "0";
-//    args << "false";
-//    args << "false";
-//    args << "-";
     m_serverProcess.execute(m_serial, args);
     return true;
 }
@@ -182,9 +257,9 @@ void Server::onServerProcessResult(AdbProcess::AdbRetCode code)
             qCritical("adb shell start server failed");
             m_serverState = ServerStatusNone;
             /* Todo: disable reverse */
-            if (m_reverseCreated) {
+            if (m_tunnelEnabled) {
                 disableTunnelReverse();
-                m_reverseCreated = false;
+                m_tunnelEnabled = false;
             }
             /* Todo: remove server */
             removeServer();
@@ -214,7 +289,7 @@ void Server::onServerStatusResult(AdbProcess::AdbRetCode code)
 
     case ServerStatusEnableReverse:
         if (AdbProcess::AdbRetExecSucc == code) {
-            m_reverseCreated = true;
+            m_tunnelEnabled = true;
             m_serverState = ServerStatusExec;
             serverStartByStep();
         } else if (AdbProcess::AdbRetStartSucc != code) {
@@ -245,6 +320,7 @@ bool Server::serverStartByStep()
     case ServerStatusPush:
         ret = installServer();
         break;
+
     case ServerStatusEnableReverse:
         ret = enableTunnelReverse();
         break;
@@ -264,6 +340,30 @@ bool Server::serverStartByStep()
     default:
         break;
     }
-
+    if (!ret) {
+        emit serverStartResult(false);
+    }
     return ret;
+}
+
+void Server::startAcceptTimeoutTimer()
+{
+    stopAcceptTimeoutTimer();
+    m_acceptTimeoutTimer = startTimer(1000);
+}
+
+void Server::stopAcceptTimeoutTimer()
+{
+    if (m_acceptTimeoutTimer) {
+        killTimer(m_acceptTimeoutTimer);
+        m_acceptTimeoutTimer = 0;
+    }
+}
+
+void Server::timerEvent(QTimerEvent *event)
+{
+    if (event && m_acceptTimeoutTimer == event->timerId()) {
+        stopAcceptTimeoutTimer();
+        emit serverConnected(false, "", QSize());
+    }
 }

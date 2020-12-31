@@ -17,6 +17,7 @@ void AdbProcess::initSignal()
        } else {
            emit adbProcessResult(AdbRetExecFail);
        }
+       qDebug() << "adb return " << exitCode << "exit status " << exitStatus;
     });
 
     connect(this, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
@@ -39,7 +40,7 @@ void AdbProcess::initSignal()
     });
 
     connect(this, &QProcess::started, this, [this]() {
-        qDebug() << "started";
+        emit adbProcessResult(AdbRetStartSucc);
     });
 }
 
@@ -69,6 +70,24 @@ void AdbProcess::remove(const QString &serial, const QString &remote)
     adbArgs << "shell";
     adbArgs << "rm";
     adbArgs << remote;
+    execute(serial, adbArgs);
+}
+
+void AdbProcess::forward(const QString& serial, quint16 localPort, const QString& deviceSocketName)
+{
+    QStringList adbArgs;
+    adbArgs << "forward";
+    adbArgs << QString("tcp:%1").arg(localPort);
+    adbArgs << QString("localabstract:%1").arg(deviceSocketName);
+    execute(serial, adbArgs);
+}
+
+void AdbProcess::forwardRemove(const QString& serial, quint16 localPort)
+{
+    QStringList adbArgs;
+    adbArgs << "forward";
+    adbArgs << "--remove";
+    adbArgs << QString("tcp:%1").arg(localPort);
     execute(serial, adbArgs);
 }
 

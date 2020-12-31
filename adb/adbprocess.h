@@ -19,6 +19,8 @@ public:
     void execute(const QString& serial, const QStringList& args);
     void push(const QString& serial, const QString& local, const QString& remote);
     void remove(const QString& serial, const QString& remote);
+    void forward(const QString& serial, quint16 localPort, const QString& deviceSocketName);
+    void forwardRemove(const QString& serial, quint16 localPort);
     void reverse(const QString& serial, const QString& deviceSocketName, const quint16 localPort);
     void removeReverse(const QString& serial, const QString& deviceSocketName);
     QStringList getDevicesSerialFromStdout();

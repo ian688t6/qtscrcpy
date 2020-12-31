@@ -10,7 +10,11 @@ Dialog::Dialog(QWidget *parent)
 {
     ui->setupUi(this);
     connect(&m_server, &Server::serverStartResult, this, [this](bool success){
-        qDebug() << "server started" << success;
+        if (success) {
+            m_server.connectTo();
+        } else {
+            close();
+        }
     });
     connect(&m_server, &Server::serverConnected, this, [this](bool success, const QString& deviceName, const QSize& size){
         qDebug() << "server connected" << success << deviceName << size;
@@ -26,8 +30,13 @@ Dialog::Dialog(QWidget *parent)
         m_frames.lock();
         qDebug() << "Decoder::onNewFrame";
         const AVFrame *frame = m_frames.consumeRenderedFrame();
+        m_videoWidget->setFrameSize(QSize(frame->width, frame->height));
+        m_videoWidget->updateTextures(frame->data[0], frame->data[1], frame->data[2], frame->linesize[0], frame->linesize[1], frame->linesize[2]);
         m_frames.unLock();
     });
+
+    m_videoWidget = new QYUVOpenGLWidget(Q_NULLPTR);
+    m_videoWidget->resize(480, 864);
 }
 
 Dialog::~Dialog()
@@ -59,10 +68,11 @@ void Dialog::on_testBtn_clicked()
 //    myProcess->remove("", "/storage/sdcard0/Download/vimrc");
 //    myProcess->removeReverse("", "scrcpy");
     qDebug() << "start Btn clicked";
-    m_videoWidget = new QYUVOpenGLWidget(Q_NULLPTR);
-    m_videoWidget->show();
-    m_server.start("", 27183, 720, 8000000);
 
+    m_server.start("", 27183, 720, 8000000);
+    if (m_videoWidget) {
+        m_videoWidget->show();
+    }
 }
 
 void Dialog::on_stopBtn_clicked()
