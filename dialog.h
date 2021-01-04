@@ -24,6 +24,8 @@ private slots:
 
     void on_stopBtn_clicked();
 
+    void on_testInputBtn_clicked();
+
 private:
     Ui::Dialog *ui;
     Server m_server;

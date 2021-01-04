@@ -1,5 +1,5 @@
 #include <QDebug>
-//#include "adbprocess.h"
+#include "controlevent.h"
 
 #include "dialog.h"
 #include "ui_dialog.h"
@@ -28,7 +28,6 @@ Dialog::Dialog(QWidget *parent)
     m_decoder.setFrame(&m_frames);
     connect(&m_decoder, &Decoder::onNewFrame, this, [this](){
         m_frames.lock();
-        qDebug() << "Decoder::onNewFrame";
         const AVFrame *frame = m_frames.consumeRenderedFrame();
         m_videoWidget->setFrameSize(QSize(frame->width, frame->height));
         m_videoWidget->updateTextures(frame->data[0], frame->data[1], frame->data[2], frame->linesize[0], frame->linesize[1], frame->linesize[2]);
@@ -36,7 +35,7 @@ Dialog::Dialog(QWidget *parent)
     });
 
     m_videoWidget = new QYUVOpenGLWidget(Q_NULLPTR);
-    m_videoWidget->resize(480, 864);
+    m_videoWidget->resize(240, 432);
 }
 
 Dialog::~Dialog()
@@ -78,4 +77,16 @@ void Dialog::on_testBtn_clicked()
 void Dialog::on_stopBtn_clicked()
 {
     m_server.stop();
+}
+
+void Dialog::on_testInputBtn_clicked()
+{
+    QRect pos;
+    pos.setLeft(100);
+    pos.setTop(100);
+    pos.setWidth(m_videoWidget->frameSize().width());
+    pos.setHeight(m_videoWidget->frameSize().height());
+    ControlEvent mouseEvent(ControlEvent::ControlEventMouse);
+    mouseEvent.setMouseEventData(AMOTION_EVENT_ACTION_DOWN, AMOTION_EVENT_BUTTON_PRIMARY, pos);
+    m_server.getDeviceSocket()->write(mouseEvent.serializeData());
 }

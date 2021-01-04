@@ -30,6 +30,8 @@ include($$PWD/adb/adb.pri)
 include($$PWD/server/server.pri)
 include($$PWD/decoder/decoder.pri)
 include($$PWD/render/render.pri)
+include($$PWD/android/android.pri)
+include($$PWD/inputcontrol/inputcontrol.pri)
 include($$PWD/commen/commen.pri)
 
 # Include sub module path
@@ -39,6 +41,8 @@ INCLUDEPATH += \
     $$PWD/decoder \
     $$PWD/commen \
     $$PWD/render \
+    $$PWD/android \
+    $$PWD/inputcontrol \
     $$PWD/addons/ffmpeg/include
 
 # dependence lib

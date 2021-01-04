@@ -39,6 +39,19 @@
     <string>stop</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="testInputBtn">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>270</y>
+     <width>88</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>test input</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
